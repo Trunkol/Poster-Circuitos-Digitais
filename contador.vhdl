@@ -1,85 +1,61 @@
-library ieee;
-use ieee.std_logic_1164.all;
+--libraries to be used are specified here
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
 
+--entity declaration with port definitions
 entity contador is
-port(
-	clockcont, s, enable, reset : in std_logic;
-	qc : out std_logic_vector(2 downto 0)
+port ( clk:     in std_logic;
+          reset:      in std_logic;
+          counter : out std_logic_vector(5 downto 0)
 );
 end contador;
 
-architecture contador of contador is
-	component flipflopJK is
-		port(
-			J, K, clk, clear, preset: in std_logic;
-			Q, Qbar : out std_logic
-		);
-	end component;
+--architecture of entity
+architecture Behavioral of contador is
+--signal declaration.
+signal J3,J4,J5,J6,Q1,Q2,Q3,Q4,Q5,Q6,Qbar1,Qbar2,Qbar3,Qbar4, Qbar5, Qbar6 : std_logic :='0';
+signal ave, aam, avo, gve, gam, gvo : std_logic;
 
-	component DivisorFrequencia is
-		port( 
-			clock_in : in std_logic;
-			clock_out : out std_logic
-		);
-	end component;
+begin 
+	J3 <= Q1 and Q2;
+	J4<= J3 and Q3;
+	J5<= J4 and Q4;
+	J6<= J5 and Q5;
 
-	signal jd, kd, kc, qs, js, ks : std_logic_vector(5 downto 0);
-	signal ss, es, rs  : std_logic;
-	signal ave, aam, avo, gve, gam, gvo : std_logic;
-	
-	signal clock_reduzido : std_logic;
-begin
-	
-  -- Instancia do divisorFrequencia
-  DVF00 : DivisorFrequencia port map (clockcont, clock_reduzido);
+--entity instantiations
 
-  -- FlipflopJK para contagem
-  FF00 : flipflopJK port map (js(0), ks(0), clock_reduzido, '1', '1', qs(0));
-  FF01 : flipflopJK port map (js(1), ks(1), clock_reduzido, '1', '1', qs(1));
-  FF02 : flipflopJK port map (js(2), ks(2), clock_reduzido, '1', '1', qs(2));
-  FF03 : flipflopJK port map (js(3), ks(3), clock_reduzido, '1', '1', qs(3));
-  FF04 : flipflopJK port map (js(4), ks(4), clock_reduzido, '1', '1', qs(4));
-  FF05 : flipflopJK port map (js(5), ks(5), clock_reduzido, '1', '1', qs(5));
+	FF1 : entity work.flipflopJK port map (clk,'1','1',Q1,Qbar1,reset);
+	FF2 : entity work.flipflopJK port map (clk,Q1,Q1,Q2,Qbar2,reset);
+	FF3 : entity work.flipflopJK port map (clk,J3,J3,Q3,Qbar3,reset);
+	FF4 : entity work.flipflopJK port map (clk,J4,J4,Q4,Qbar4,reset);
+	FF5 : entity work.flipflopJK port map (clk,J5,J5,Q5,Qbar5,reset);
+	FF6 : entity work.flipflopJK port map (clk,J6,J6,Q6,Qbar6,reset);
 	
-  --Contando de 0 a 45:
-  js(5) <= not qs(4) or not qs(3) or not qs(2) or not qs (1) or not qs(0);
-  ks(5) <= not qs(3) or not qs(2) or not qs(0);
-  js(4) <= not qs(3) or not qs(2) or not qs(1) or not qs(0);
-  ks(4) <= not qs(3) or not qs(2) or not qs(1) or not qs(0);
-  js(3) <= not qs(2) or not qs(1) or not qs(0);
-  ks(3) <= not qs(2) or not qs(0) or not(qs(5) and qs(1));
-  js(2) <= not qs(1) or not qs(0);
-  ks(2) <= not qs(0) or not(qs(5) and qs(1)) or not(qs(3) and qs(1));
-  js(1) <= not qs(0) or (qs(5) and qs(3) and qs(2));
-  ks(1) <= not qs(0);
-  Js(0) <= '0';
-  ks(0) <= '0';
-  
-  --situação A:
-  ave <= not(qs(5) and qs(4)) or (not(qs(5)) and qs(3) and qs(2));
-  aam <= (qs(4) and not qs(3) and qs(2) and not qs(1)) or (qs(4) and not qs(3) and qs(2) and not qs(0));
-  avo <= qs(5) or (qs(4) and qs(3)) or ((qs(4) and qs(2)) and (qs(1) and qs(0)));
-  gve <= (qs(4) and qs(3)) or (qs(5) and not qs(3)) or (qs(5) and not qs(2) and not qs(1)) or (qs(5) and not qs(2) and not qs(0)) or (qs(4) and qs(2) and qs(1) and qs(0));
-  gam <= (qs(5) and qs(3) and qs(2)) or (qs(5) and qs(3) and qs(1) and qs(0));
-  gvo <= (not qs(5) and not qs(4)) or not(qs(5) and qs(3) and qs(2)) or not(qs(5) and qs(3) and qs(1)) or not(qs(5) and qs(3) and qs(0));
-  
-  --situação B:
-  ave <= not(qs(5) and qs(4)) or not(qs(5) and qs(3)) or not(qs(5) and qs(2)) or not(qs(5) and qs(1));
-  aam <= (qs(4) and qs(3) and qs(2) and qs(1)) or (qs(5) and not qs(3) and not qs(2) and not qs(1) and not qs(0));
-  avo <= (qs(5) and qs(0)) or (qs(5) and qs(1)) or (qs(5) and qs(2)) or (qs(5) and qs(3));
-  gve <= (qs(5) and not qs(3) and qs(0)) or (qs(5) and qs(1) and not qs(0)) or (qs(5) and not qs(3) and qs(2)) or (qs(5) and qs(3) and not qs(2) and not qs(1));
-  gam <= (qs(5) and qs(3) and qs(2)) or (qs(5) and qs(3) and qs(1) and qs(0));
-  gvo <= not qs(5) or not(qs(3) and qs(2) and qs(1) and qs(0));
-  
-  --situação C:
-  ave <= '0';
-  aam <= not qs(0);
-  avo <= '0';
-  gve <= '0';
-  gam <= not qs(0);
-  gvo <= '0';
- 
-	ss <= s;
-	es <= enable;
-	rs <= reset;	
-end contador;
+	--situação A:
+  ave <= not(Q6 and Q5) or (not(Q6) and Q4 and Q3);
+  aam <= (Q5 and not Q4 and Q3 and not Q2) or (Q5 and not Q4 and Q3 and not Q1);
+  avo <= Q6 or (Q5 and Q4) or ((Q5 and Q3) and (Q2 and Q1));
+  gve <= (Q5 and Q4) or (Q6 and not Q4) or (Q6 and not Q3 and not Q2) or (Q6 and not Q3 and not Q1) or (Q5 and Q3 and Q2 and Q1);
+  gam <= (Q6 and Q4 and Q3) or (Q6 and Q4 and Q2 and Q1);
+  gvo <= (not Q6 and not Q5) or not(Q6 and Q4 and Q3) or not(Q6 and Q4 and Q2) or not(Q6 and Q4 and Q1);
+
+--  --situação B:
+--  ave <= not(Q6 and Q5) or not(Q6 and Q4) or not(Q6 and Q3) or not(Q6 and Q2);
+--  aam <= (Q5 and Q4 and Q3 and Q2) or (Q6 and not Q4 and not Q3 and not Q2 and not Q1);
+--  avo <= (Q6 and Q1) or (Q6 and Q2) or (Q6 and Q3) or (Q6 and Q4);
+--  gve <= (Q6 and not Q4 and Q1) or (Q6 and Q2 and not Q1) or (Q6 and not Q4 and Q3) or (Q6 and Q4 and not Q3 and not Q2);
+--  gam <= (Q6 and Q4 and Q3) or (Q6 and Q4 and Q2 and Q1);
+--  gvo <= not Q6 or not(Q4 and Q3 and Q2 and Q1);
+--  
+--  --situação C:
+--  ave <= '0';
+--  aam <= not Q1;
+--  avo <= '0';
+--  gve <= '0';
+--  gam <= not Q1;
+--  gvo <= '0';
+	
+	
+	counter <= Q6 & Q5 & Q4 & Q3 & Q2 & Q1; 
+
+end Behavioral;
